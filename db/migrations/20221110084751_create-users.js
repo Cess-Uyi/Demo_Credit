@@ -1,0 +1,27 @@
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.up = function (knex) {
+  return knex.schema
+    .createTable("users", (table) => {
+      table.increments("id").primary().unsigned();
+      table.string("first_name").notNullable();
+      table.string("last_name").notNullable();
+      table.string("email").notNullable().unique();
+      table.string("password").notNullable();
+      table
+        .timestamp("created_at")
+        .notNullable()
+        .defaultTo(knex.raw("CURRENT_TIMESTAMP"));
+      table.timestamp("updated_at").nullable();
+    })
+};
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.down = function (knex) {
+  return knex.schema.dropTable("users");
+};
+
