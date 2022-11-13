@@ -25,12 +25,12 @@ class Users {
       };
 
       // create user and save to db
-      const newUser = await db("users")
+      const newUser = db("users")
         .insert(userDTO)
         .then((id) => {
           // get user by id
           return db("users")
-            .where({ id: id })
+            .where({ id })
             .then((user) => {
               // JSON.parse(JSON.stringify(user[0])) gets the raw data without RowDataPacket
               return JSON.parse(JSON.stringify(user[0]));
@@ -38,7 +38,7 @@ class Users {
         });
 
       // create wallet for user and save to db
-      const userWallet = await db("wallets")
+      const userWallet = db("wallets")
         .insert({
           user_id: newUser.id,
           balance: "0",
@@ -46,7 +46,7 @@ class Users {
         .then((id) => {
           // get wallet by id
           return db("wallets")
-            .where({ id: id })
+            .where({ id })
             .then((wallet) => {
               // JSON.parse(JSON.stringify(wallet[0])) gets the raw data without RowDataPacket
               return JSON.parse(JSON.stringify(wallet[0]));
