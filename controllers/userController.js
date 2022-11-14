@@ -25,7 +25,7 @@ class Users {
       };
 
       // create user and save to db
-      const newUser = db("users")
+      const newUser = await db("users")
         .insert(userDTO)
         .then((id) => {
           // get user by id
@@ -38,7 +38,7 @@ class Users {
         });
 
       // create wallet for user and save to db
-      const userWallet = db("wallets")
+      const userWallet = await db("wallets")
         .insert({
           user_id: newUser.id,
           balance: "0",
