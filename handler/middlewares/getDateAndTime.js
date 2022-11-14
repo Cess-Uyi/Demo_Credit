@@ -1,7 +1,7 @@
 const dateTime = () => {
-  var currentdate = new Date();
+  let currentdate = new Date();
 
-  return DT =
+  return (DT =
     currentdate.getFullYear() +
     "-" +
     (currentdate.getMonth() + 1) +
@@ -12,7 +12,7 @@ const dateTime = () => {
     ":" +
     currentdate.getMinutes() +
     ":" +
-    currentdate.getSeconds();
-}
+    currentdate.getSeconds());
+};
 
 module.exports = dateTime;

@@ -39,8 +39,7 @@ class Wallets {
       //convert balance from string to number
       prevBalance = Number(prevBalance[0].balance);
 
-      var newBalance = prevBalance + amount;
-      newBalance = +newBalance;
+      let newBalance = (prevBalance + amount).toString();
 
       // save to db
       const updatedWallet = await db("wallets")
@@ -109,8 +108,7 @@ class Wallets {
         return errorResponse(res, 400, "insufficient balance", null);
       }
 
-      var newBalance = prevBalance - amount;
-      newBalance = +newBalance;
+      let newBalance = (prevBalance - amount).toString();
 
       //save to db
       const updatedWallet = await db("wallets")
@@ -136,6 +134,119 @@ class Wallets {
         updatedWallet,
       });
     } catch (err) {
+      errorResponse(res, 500, "internal server error", err.message);
+    }
+  }
+
+  static async transfer(req, res) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return errorResponse(res, 422, "validation error", errors.mapped());
+    }
+    try {
+      const user = req.user;
+      const { amount, recipientId, recipientEmail } = req.body;
+
+      // check that either recipientId or recipient email is provided
+      if (!recipientId && !recipientEmail) {
+        return errorResponse(
+          res,
+          400,
+          "recipientId or recipientEmail must be provided",
+          null
+        );
+      }
+
+      // if recipientId and recipient email is provided, check that they belong to the same user
+      if (recipientId && recipientEmail) {
+        let userById = await db
+          .select("id")
+          .from("users")
+          .where({ id: recipientId });
+        userById = JSON.parse(JSON.stringify(userById[0]));
+
+        let userByEmail = await db
+          .select("id")
+          .from("users")
+          .where({ email: recipientEmail });
+        userByEmail = JSON.parse(JSON.stringify(userByEmail[0]));
+
+        if (userById.id != userByEmail.id) {
+          return errorResponse(
+            res,
+            400,
+            "conflicting users. Kindly check the data being inputted",
+            null
+          );
+        }
+      }
+
+      // Get recipientId
+      if (recipientId) {
+        var verifiedRecipient = await db
+          .select("*")
+          .from("users")
+          .where({ id: recipientId });
+      } else {
+        var verifiedRecipient = await db
+          .select("*")
+          .from("users")
+          .where({ email: recipientEmail });
+      }
+      verifiedRecipient = JSON.parse(JSON.stringify(verifiedRecipient[0]));
+
+      //fetch previous balance for user signed in
+      let userPrevBalance = await db
+        .select("balance")
+        .from("wallets")
+        .where({ user_id: user.id });
+
+      // convert balance from string to number
+      userPrevBalance = Number(userPrevBalance[0].balance);
+
+      //fetch previous balance for recipient
+      let recipientPrevBalance = await db
+        .select("balance")
+        .from("wallets")
+        .where({ user_id: verifiedRecipient.id });
+
+      // convert balance from string to number
+      recipientPrevBalance = Number(recipientPrevBalance[0].balance);
+
+      //check that the amount to be transferred is not greater than balance
+      if (amount > userPrevBalance) {
+        return errorResponse(res, 400, "insufficient balance", null);
+      }
+
+      const userNewBalance = (userPrevBalance - amount).toString();
+
+      const recipientNewBalance = (
+        recipientPrevBalance + Number(amount)
+      ).toString();
+
+      //make transactions to the db
+      await db.transaction(async (trx) => {
+        const [updatedUser, updatedRecipient] = await Promise.all([
+          trx("wallets")
+            .where({ user_id: user.id })
+            .update({ balance: userNewBalance, updated_at: dateTime() })
+            .transacting(trx),
+          trx("wallets")
+            .where({ user_id: verifiedRecipient.id })
+            .update({ balance: recipientNewBalance, updated_at: dateTime() })
+            .transacting(trx),
+        ]);
+      });
+
+      return successResponse(res, 200, "transfer successful", {
+        transactionDetails: {
+          prevBalance: userPrevBalance,
+          amount: amount,
+          newBalance: userNewBalance,
+        }
+      });
+    } catch (err) {
+      console.log(err);
       errorResponse(res, 500, "internal server error", err.message);
     }
   }
