@@ -12,5 +12,13 @@ router.post("/fund", checkAuth, ValidateAuth.FUND, walletController.fund);
 
 router.post("/withdraw", checkAuth, ValidateAuth.WITHDRAW, walletController.withdraw);
 
+router.post(
+  "/transfer",
+  checkAuth,
+  ValidateAuth.TRANSFER,
+  walletController.transfer
+);
+
+
 
 module.exports = router;
