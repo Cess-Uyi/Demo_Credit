@@ -36,7 +36,9 @@ yarn run dev
 ```
 
 ## Running in Production
+```
 npm start
+```
 
 ## Migrations
 ```
