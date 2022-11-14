@@ -97,7 +97,7 @@ class Users {
         const valid = await bcrypt.compareSync(password, user.password);
 
         if (!valid) {
-          return errorResponse(res, 409, "invalid login details", null);
+          return errorResponse(res, 401, "invalid login details", null);
         } else {
           // create a token
           const token = jwt.sign(
