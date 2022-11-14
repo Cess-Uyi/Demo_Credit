@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const dotenv = require("dotenv").config();
 const routes = require("./routes/routes.js");
 
+
 //middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
